@@ -1,124 +1,134 @@
 extensions [array table]
 
-__includes [
 
-  "nls/read-input-file.nls"
-  "nls/add-salmon.nls"
-  ]
+to setup
+  crt 10 [
+    setxy random-xcor random-ycor
+    set size 2 
+  ] 
+  
+   let current-velocity [0 3 7.5 80 4 6 8 9 10]
+   let test-list [1 2 3 4 5 6 7 8 9]
 
-globals
 
-[
+ask turtle 5 [
+  set shape "circle"
+  let nearest-neighbors min-n-of 3 other turtles [ distance myself ]
+  print word "nearest-neighbors: " nearest-neighbors
+ let nn-list sort nearest-neighbors 
+  print word "nn: " nn-list
 ]
 
-patches-own 
-[
- patch-unit-number                                                      ;; sequential number used as a reference from original downstream migration model of junveniles
- patch-length                                                           ;; length (m)
- patch-width                                                            ;; width (m)
- patch-area                                                             ;; total area (m2)
- patch-rkm                                                              ;; midpoint? upstream? distance
-; patch-mht                                                             ;; unique number+type
-; patch-type                                                            ;; non-unique type (riffle, run, pool, etc)
+;test current-velocity test-list
+;let a array:from-list current-velocity 
+;
+;print a
 
 
-]
 
-breed [ races race ]                                                    ;; natal stream
-;breed [ runs-timing run-timing ]                                                      ;; timing of migration
 
-races-own
 
-[
+
+;let dict table:make 
+;table:put dict test-list current-velocity
+;
+;
+;print dict
+;print table:keys dict
+;print sort-with test-list dict
+;
+
+
+;let x table:to-list dict
+;print word "x: " x
+;print word "X-sorted: " sort-by > x
+
+
+
+
+;  print word "sublist: " take 3 current-velocity 
   
-  mass                                                                  ;; normal distribution from average size
-  my-race                                                               ;; natal stream
-  my-run                                                                ;; timing of migration
-  energy-level                                                          ;; energy level that drains as ticks go by
-  run-timing                                                            ;; timing of migration
-
-]
-
-;------------------------------------------------------------------------------------------------------
-
-to setup                                                                   
-  ca                                                                    ;; clear all turtles, variables, patch changes
-  read-input-file
+  ;print word "maxes-by: " maxes-by 3 current-velocity
   
   
-  crt 10000                                                                ;; creates 10000 new fish for illustrative purposes; Eventually I want this to create a number of new fish entering from the ocean as defined in a table
-  
-  [
-    set size 1                                                             ;; set size of new fish to 1
-    set color green                                                        ;; set color of new fish to green indicating the fish are alive
-    setxy 0 0                                                              ;; set the x,y coordinates of the fish to the first habitat unit
-    set heading 90                                                         ;; set the heading of the 2 new fish to 90 degrees or due East (facing upstream)
-  ]
-  
-  reset-ticks                                                              ;; reset-ticks restarts the tick counter at the start of an experiment run
   
 end
 
-;------------------------------------------------------------------------------------------------------
-
-to go                                                                      ;; initiate go sequence of events with the "go" button on the user interface
+to test [list1 list2]
+;  let list1 [3 1 2] 
+  print (word "list1 = " list1) 
+ ; let list2 ["a" "b" "c"] 
+  print (word "list2 = " list2) 
+  let combined (map [list ?1 ?2] list1 list2) 
+  print (word "combined = " combined) 
+  let sorted sort-by [first ?1 > first ?2] combined 
+  print (word "sorted = " sorted) 
+  set list1 map [first ?] sorted 
+  print (word "list1 = " list1) 
+  set list2 map [item 1 ?] sorted 
+  print (word "list2 = " list2)   
   
-  if all? turtles [xcor = 2634]                                            ;; if all turtles reach the end of the model, stop 
-    [ stop ]
+  let r-sorted sublist list1 0 4
+  print word "r-sorted: " r-sorted 
+  let patch-sorted sublist list2 0 4
+  print word "patch-sorted: " patch-sorted
   
-;;ask turtles [add-salmon]
+end 
 
-;;ask turtles [do-mortality]
+to choose-values
 
-  ask turtles [ do-migration ]                                             ;; make the salmon move upstream to the upstream segment with the lowest velocity (if lower velocity exists upstream)
+
+end
+
+
+to-report sort-with [ key lst ]
+  report sort-by [(runresult key ?1) < (runresult key ?2)] lst
+end
+
+
+
+
+to-report take [n xs] ;xs = listget
+  
+ report sublist xs 0 max list n (length xs)
  
-  tick                                                                     ;; "tick" moves the clock one time step forward. In this model the time step is 1 day
-
-end
-
-;------------------------------------------------------------------------------------------------------
-
-to add-salmon
-;                                                                          ;; add number of salmon on a daily basis from a matrix
-end
-
-
-;------------------------------------------------------------------------------------------------------
-
-to do-mortality
-;                                                                          ;; calculate the "battery life" of each salmon, kill those who are ecologically dead
-end
-
-;------------------------------------------------------------------------------------------------------
-
-to do-migration                                                            ;; make the salmon move upstream according to the advection-diffusion parameters, using the patch-length
-
+ 
+ ; report sublist xs 0 min list n (length xs)
+  
   
 end
 
-;------------------------------------------------------------------------------------------------------
+to-report maxes-by [metric xs]
+let scores map  metric xs
+let winning-score max scores
+report map first filter [item 1 ? = winning-score] (map list xs scores)
+end
+
+;to-report max-value-list [a b]
+;  sort-by
+;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-51422
-60
--1
-0
-20.0
+649
+470
+16
+16
+13.0
 1
 10
 1
 1
 1
 0
-0
-0
 1
-0
-2634
-0
-0
+1
+1
+-16
+16
+-16
+16
 0
 0
 1
@@ -126,46 +136,12 @@ ticks
 30.0
 
 BUTTON
-33
-41
-130
-95
-NIL
+112
+70
+179
+103
 setup
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-33
-106
-130
-158
-NIL
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-33
-175
-129
-233
-step
-go
+Setup
 NIL
 1
 T
