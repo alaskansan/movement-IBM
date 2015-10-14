@@ -1,0 +1,22 @@
+to read-input-file
+  
+  file-open "KlamathHabitats.txt"
+  while [not file-at-end?]
+  [
+    let next-X file-read
+    let next-Y file-read
+    let next-patch-unit-number file-read
+    let next-patch-length file-read
+    let next-patch-width file-read
+    let next-patch-area file-read
+    let next-patch-rkm file-read
+    ask patch next-X next-Y [set patch-unit-number next-patch-unit-number]
+    ask patch next-X next-Y [set patch-length next-patch-length]
+    ask patch next-X next-Y [set patch-width next-patch-width]
+    ask patch next-X next-Y [set patch-area next-patch-area]
+    ask patch next-X next-Y [set patch-rkm next-patch-rkm]
+
+  ]
+  file-close
+  
+end
