@@ -46,7 +46,7 @@ to setup
   read-input-file
   
   
-  crt 10000                                                                ;; creates 10000 new fish for illustrative purposes; Eventually I want this to create a number of new fish entering from the ocean as defined in a table
+  crt 1                                                                    ;; creates 1 new fish for illustrative purposes; Eventually I want this to create a number of new fish entering from the ocean as defined in a table
   
   [
     set size 1                                                             ;; set size of new fish to 1
@@ -78,13 +78,6 @@ end
 
 ;------------------------------------------------------------------------------------------------------
 
-to add-salmon
-;                                                                          ;; add number of salmon on a daily basis from a matrix
-end
-
-
-;------------------------------------------------------------------------------------------------------
-
 to do-mortality
 ;                                                                          ;; calculate the "battery life" of each salmon, kill those who are ecologically dead
 end
@@ -101,8 +94,8 @@ end
 GRAPHICS-WINDOW
 210
 10
-51422
-60
+32977
+61
 -1
 0
 20.0
