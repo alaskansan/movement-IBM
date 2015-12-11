@@ -1,35 +1,88 @@
 extensions [ gis ]                                                                       ;; must tell NetLogo to load gis extension, included in NetLogo
-globals [ klamath-dataset
-          parkboundary-dataset                                                                 ;; global variables include all of the gis datasets you will be using
-          waterbodies-dataset
-          streams-dataset]
-;          elevation-dataset ]
-; breed [ city-labels city-label ]                                                         ;; 
-; breed [ country-labels country-label ]
+globals [ klamath-dataset                                                                ;; Klamath River dataset, clipped Ocean to Iron Gate Dam
+          mht-dataset                                                                    ;; Mesohabitat Units to match how R model accounts for population. Need to create this- polygon shapefile from USFWS survey data
+          destination-dataset                                                            ;; Spawning destinations that match natal location of fish. Need to create this- polygon shapefile from literature
+          thermalrefugia-dataset]                                                        ;; Locations of thermal refugia- may or may not be used. Will be created from previous research.
+; breed [ mht-labels mht-label ]                                                         ;; NOT SURE IF I UNDERSTAND THE USE OF BREEDS IN THIS CONTEXT
+; breed [ destinations destination ]
 ; breed [ country-vertices country-vertex ]
- breed [ klamath-labels klamath-label ]
-patches-own [ population country-name elevation ]                                        ;; population, country-name, and elevation can be called via patches
+
+patches-own [ population-size mht is-thermal-refugia ]                                   ;; count of fish population in patch, MHT number, and status as thermal refugia
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 
 to setup
-  ca                                                                                     ;; clear all previous work
+  ca
   ; Note that setting the coordinate system here is optional, as
   ; long as all of your datasets use the same coordinate system.
-  ; gis:load-coordinate-system (word "data/" projection ".prj")                          ;; when this is not commented out, I get a runtime error saying that the WGS 84 prj is not found. Does this come from the selection of WGS 84 on the interface??
-  ; Load all of our datasets
+ ; gis:load-coordinate-system (word "data/" projection ".prj")                            ;; NHD dataset is in GCS NAD83, getting an error when I run this that file does not exist
   set klamath-dataset gis:load-dataset "NHDKlamath.shp"
-  ;set parkboundary-dataset gis:load-dataset "parkboundary.shp"
-  ;set waterbodies-dataset gis:load-dataset "waterbodies.shp"
-  ;set streams-dataset gis:load-dataset "streams.shp"
-;  set countries-dataset gis:load-dataset "data/countries.shp"
-;  set elevation-dataset gis:load-dataset "data/world-elevation.asc"
-;  ; Set the world envelope to the union of all of our dataset's envelopes
+  ;set mht-dataset gis:load-dataset "KlamathMHT.shp"
+  ;set destination-dataset gis:load-dataset "KlamathSpawningDestinations.shp"
+  ;set thermalrefugia-dataset gis:load-dataset "KlamathThermalRefugia.shp"
+
   gis:set-world-envelope ;(gis:envelope-union-of 
-                         (gis:envelope-of klamath-dataset)
+                         (gis:envelope-of klamath-dataset)                               ;; Set the world envelope to the union of all of our dataset's envelopes
 ;                                                (gis:envelope-of waterbodies-dataset)
 ;                                                (gis:envelope-of streams-dataset))
 ;                                                (gis:envelope-of elevation-dataset))
 end
-;
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
+
+;; Drawing polyline data from a shapefile
+to display-klamath
+  gis:set-drawing-color blue
+  gis:draw klamath-dataset 4                                                       ;; when this is set to 1, I get a much larger scale. Set to 4 gives smaller scale but there are holes in the river. Need to figure out appropriate scale here (width of river)
+end
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
+
+;; Using gis:intersecting to find the set of patches that intersects
+;; a given vector feature (in this case, a river).
+to display-klamath-in-patches
+  ask patches [ set pcolor black ]
+  ask patches gis:intersecting klamath-dataset
+  [ set pcolor cyan ]
+end
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
+
+to display-mht
+  gis:set-drawing-color black
+  gis:draw klamath-dataset 1                                            
+end
+to display-mhts                                                   ;; may use this to display MHT in patches?
+;  ; This is the preferred way of copying values from a raster dataset
+;  ; into a patch variable: in one step, using gis:apply-raster.
+;  gis:apply-raster elevation-dataset elevation
+;  ; Now, just to make sure it worked, we'll color each patch by its
+;  ; elevation value.
+;  let min-elevation gis:minimum-of elevation-dataset
+;  let max-elevation gis:maximum-of elevation-dataset
+;  ask patches
+;  [ ; note the use of the "<= 0 or >= 0" technique to filter out
+;    ; "not a number" values, as discussed in the documentation.
+;    if (elevation <= 0) or (elevation >= 0)
+;    [ set pcolor scale-color black elevation min-elevation max-elevation ] ]
+end
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
+
+;; This is a second way of copying values from a raster dataset into               ;; alternative to previous "to-display-elevation-in-patches"
+;; patches, by asking for a rectangular sample of the raster at each
+;; patch. This is somewhat slower, but it does produce smoother
+;; subsampling, which is desirable for some types of data.
+;to sample-elevation-with-patches
+;  let min-elevation gis:minimum-of elevation-dataset
+;  let max-elevation gis:maximum-of elevation-dataset
+;  ask patches
+;  [ set elevation gis:raster-sample elevation-dataset self
+;    if (elevation <= 0) or (elevation >= 0)
+;    [ set pcolor scale-color black elevation min-elevation max-elevation ] ]
+;end
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; Drawing point data from a shapefile, and optionally loading the
 ;; data into turtles, if label-cities is true
 ;to display-cities
@@ -53,26 +106,7 @@ end
 ;          set label gis:property-value ? "NAME" ] ] ] ]
 ;end
 ;
-;; Drawing polyline data from a shapefile, and optionally loading some
-;; of the data into turtles, if label-rivers is true
-to display-klamath
-  ask klamath-labels [ die ]
-  gis:set-drawing-color blue
-  gis:draw klamath-dataset 1
-  if klamath-dataset
-  [ foreach gis:feature-list-of klamath-dataset
-    [ let centroid gis:location-of gis:centroid-of ?
-      ; centroid will be an empty list if it lies outside the bounds
-      ; of the current NetLogo world, as defined by our current GIS
-      ; coordinate transformation
-      if not empty? centroid
-      [ create-klamath-labels 1
-          [ set xcor item 0 centroid
-            set ycor item 1 centroid
-            set size 0
-            set label gis:property-value ? "Permanent_Identifier" ] ] ] ]
-end
-;
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; Drawing polygon data from a shapefile, and optionally loading some
 ;; of the data into turtles, if label-countries is true
 ;to display-countries
@@ -92,7 +126,7 @@ end
 ;          set size 0
 ;          set label gis:property-value ? "CNTRY_NAME" ] ] ] ]
 ;end
-;
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; Loading polygon data into turtles connected by links
 ;to display-countries-using-links
 ;  ask country-vertices [ die ]
@@ -121,16 +155,8 @@ end
 ;      if first-turtle != nobody and first-turtle != previous-turtle
 ;      [ ask first-turtle
 ;        [ create-link-with previous-turtle ] ] ] ]
-;end
-;
-;; Using gis:intersecting to find the set of patches that intersects
-;; a given vector feature (in this case, a river).
-to display-klamath-in-patches
-  ask patches [ set pcolor black ]
-  ask patches gis:intersecting klamath-dataset
-  [ set pcolor cyan ]
-end
-;
+; end
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; Using gis:apply-coverage to copy values from a polygon dataset
 ;; to a patch variable
 ;to display-population-in-patches
@@ -140,7 +166,7 @@ end
 ;    [ set pcolor scale-color red population 500000000 100000 ]
 ;    [ set pcolor blue ] ]
 ;end
-;
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; Using find-one-of to find a particular VectorFeature, then using
 ;; gis:intersects? to do something with all the features from another
 ;; dataset that intersect that feature.
@@ -151,48 +177,20 @@ end
 ;  [ if gis:intersects? ? united-states
 ;    [ gis:draw ? 1 ] ]
 ;end
-;
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; Using find-greater-than to find a list of VectorFeatures by value.
 ;to highlight-large-cities
 ;  gis:set-drawing-color yellow
 ;  foreach gis:find-greater-than cities-dataset "POPULATION" 10000000
 ;  [ gis:draw ? 3 ]
 ;end
-;
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; Drawing a raster dataset to the NetLogo drawing layer, which sits
 ;; on top of (and obscures) the patches.
 ;to display-elevation
 ;  gis:paint elevation-dataset 0
 ;end
-;
-;to display-elevation-in-patches
-;  ; This is the preferred way of copying values from a raster dataset
-;  ; into a patch variable: in one step, using gis:apply-raster.
-;  gis:apply-raster elevation-dataset elevation
-;  ; Now, just to make sure it worked, we'll color each patch by its
-;  ; elevation value.
-;  let min-elevation gis:minimum-of elevation-dataset
-;  let max-elevation gis:maximum-of elevation-dataset
-;  ask patches
-;  [ ; note the use of the "<= 0 or >= 0" technique to filter out
-;    ; "not a number" values, as discussed in the documentation.
-;    if (elevation <= 0) or (elevation >= 0)
-;    [ set pcolor scale-color black elevation min-elevation max-elevation ] ]
-;end
-;
-;; This is a second way of copying values from a raster dataset into
-;; patches, by asking for a rectangular sample of the raster at each
-;; patch. This is somewhat slower, but it does produce smoother
-;; subsampling, which is desirable for some types of data.
-;to sample-elevation-with-patches
-;  let min-elevation gis:minimum-of elevation-dataset
-;  let max-elevation gis:maximum-of elevation-dataset
-;  ask patches
-;  [ set elevation gis:raster-sample elevation-dataset self
-;    if (elevation <= 0) or (elevation >= 0)
-;    [ set pcolor scale-color black elevation min-elevation max-elevation ] ]
-;end
-;
+
 ;; This is an example of how to select a subset of a raster dataset
 ;; whose size and shape matches the dimensions of the NetLogo world.
 ;; It doesn't actually draw anything; it just modifies the coordinate
@@ -204,7 +202,7 @@ end
 ;  cd
 ;  ct
 ;end
-;
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 ;; This command also demonstrates the technique of creating a new, empty
 ;; raster dataset and filling it with values from a calculation.
 ;;
@@ -235,33 +233,29 @@ end
 ;  [ if (elevation <= 0) or (elevation >= 0)
 ;    [ set pcolor scale-color black elevation min-g max-g ] ]
 ;end
-;
-;
-;; Public Domain:
-;; To the extent possible under law, Uri Wilensky has waived all
-;; copyright and related or neighboring rights to this model.
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 @#$#@#$#@
 GRAPHICS-WINDOW
 187
 10
-1869
-882
-72
-36
-11.5310345
+11197
+4441
+-1
+-1
+11.0
 1
 8
 1
 1
 1
 0
+0
+0
 1
-1
-1
--72
-72
--36
-36
+0
+999
+0
+399
 0
 0
 1
@@ -269,12 +263,12 @@ ticks
 30.0
 
 BUTTON
-5
-100
-175
-133
+3
+184
+173
+217
 NIL
-display-cities
+display-mhts
 NIL
 1
 T
@@ -321,17 +315,6 @@ NIL
 
 SWITCH
 5
-140
-175
-173
-label-cities
-label-cities
-1
-1
--1000
-
-SWITCH
-5
 300
 175
 333
@@ -343,9 +326,9 @@ label-countries
 
 BUTTON
 5
-180
+97
 175
-213
+130
 NIL
 display-klamath
 NIL
@@ -359,23 +342,23 @@ NIL
 1
 
 SWITCH
-5
-220
-175
-253
-label-rivers
-label-rivers
+4
+223
+174
+256
+label-mhts
+label-mhts
 1
 1
 -1000
 
 BUTTON
-5
-340
-175
-373
+6
+136
+174
+169
 NIL
-display-rivers-in-patches
+display-klamath-in-patches
 NIL
 1
 T
@@ -444,7 +427,7 @@ CHOOSER
 55
 projection
 projection
-"WGS_84_Geographic" "US_Orthographic" "Lambert_Conformal_Conic"
+"NAD_1983" "WGS_84_Geographic" "US_Orthographic" "Lambert_Conformal_Conic"
 0
 
 BUTTON
