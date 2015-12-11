@@ -66,7 +66,7 @@ to go                                                                      ;; in
   if all? turtles [xcor = 2634]                                            ;; if all turtles reach the end of the model, stop 
     [ stop ]
   
-;;ask turtles [add-salmon]
+;;ask turtles [add-salmon]                                                 ;; in add-salmon.nls
 
 ;;ask turtles [do-mortality]
 
@@ -77,10 +77,6 @@ to go                                                                      ;; in
 end
 
 ;------------------------------------------------------------------------------------------------------
-
-to add-salmon
-;                                                                          ;; add number of salmon on a daily basis from a matrix
-end
 
 
 ;------------------------------------------------------------------------------------------------------
