@@ -1,0 +1,5 @@
+REM  Change directory to where Netlogo is installed
+chdir "C:\Program Files (x86)\NetLogo 5.2.0"
+
+REM  Invoke the desired version of Java on the Netlogo Java instructions
+"C:\Program Files\Java\jre1.8.0_45\bin\java" -Xmx3g -Dfile.encoding=UTF-8 -jar NetLogo.jar

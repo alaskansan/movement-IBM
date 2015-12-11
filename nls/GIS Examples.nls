@@ -1,0 +1,164 @@
+;;GIS Setup Routines
+;
+;;"setup-GIS.nls"
+;
+;globals [view1 view2 view3 view4 view5 view6 view7 view8 view9]
+;               
+;to setup-GIS1 ; begin "setup-GIS.nls"
+;  
+;no-display ;turns off display to load gis files quicker
+;
+;  ; set minx 381498.170787 ; taken from GIS reference map (spatial domain for main Shulte shapefile with all of the reefs), Left. Setting NetLogo extent.
+;  ;  set maxx 385834.991336 ; Right
+;  ;  set miny 4187201.140192 ; Bottom
+;  ;  set maxy 4190438.720625 ; Top
+; 
+;ask patches [set pcolor green + (random 2) ]
+;          set view1 gis:load-dataset "Maps/StCroix_river.shp"  ;imports river shapefile
+;          set view2 gis:load-dataset "Maps/InfectedWaterinBuffer.shp" ;imports infected waterbodies within the 50 mile buffer      
+;          set view3 gis:load-dataset "Maps/Lower_StCroix_watershedBoundary.shp"  ;imports boundary of St. Croix Watershed
+;          set view4 gis:load-dataset "Maps/waterbodies25ha.shp"    ;imports all water bodies within 50 mile buffer
+;          set view5 gis:load-dataset "Maps/Centroids_Entire_Watershed.shp"  ;imports centroids of waterbodies within 50 mile buffer
+;          set view6 gis:load-dataset "Maps/Centroids_St_Croix.shp" ;imports centroids of waterbodies ONLY within St. Croix Watershed
+;          set view7 gis:load-dataset "Maps/StCroixOnlyInfected.shp" ;Imports infected waterbodies ONLY within St. Croix Watershed
+;          set view8 gis:load-dataset "Maps/StCroixWaterBodies2.shp";imports all waterbodies ONLY within St. Croix watershed
+;              
+;
+;
+;if Model-scale = "Entire Watershed" [                       ;code block that creates entire watershed including all ponds in 50 mile buffer
+;  
+;  ;gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of view1) (gis:envelope-of view2) (gis:envelope-of view3) (gis:envelope-of view4)(gis:envelope-of view5))            ;creates boundary
+;gis:set-world-envelope (gis:envelope-of view1)   
+;gis:set-world-envelope (gis:envelope-of view2)
+;gis:set-world-envelope (gis:envelope-of view3)
+;gis:set-world-envelope (gis:envelope-of view4)
+;gis:set-world-envelope (gis:envelope-of view5) 
+;
+; ;GIS-setup view4 blue       ;imports attributes of all waterbodies in 50 mile buffer
+;; GIS-Setup view5 0          ;imports centroids  
+; ;GIS-Setup view1 blue       ;imports river polyline 
+; ;GIS-Setup view2 red        ;imports infected water bodies
+;  
+;  foreach gis:feature-list-of view4
+;        [
+;        gis:set-drawing-color blue
+;        gis:draw ? 1.0
+;        gis:fill ? blue        
+;      ] 
+;      ask patches gis:intersecting view4
+;  [ set pcolor blue ] 
+;  
+;  
+;  
+;  
+;  
+;  ;gis:set-drawing-color yellow
+;  ;gis:draw view1 1
+;  
+;ask patches [ 
+;  if gis:intersects? view5 self [sprout-centroid-labels 1 [set centroid-labels-id (who + 1) set pH-centroid 0 set Calcium-centroid 0 set Turbulence-centroid 0 set Temp-centroid 0 set DO-centroid 0 set pH-list [] ;set size 1 set color white set shape "circle" 
+;      set Calcium-list [] set Turbulence-list [] set Temp-list [] set DO-list []]]
+;  ] ;creates turtles of centroids 
+;      
+;      
+;      ;ifelse Day > 0 [set pH-centroid item (ticks - 1) pH-list set Calcium-centroid item (ticks - 1) Calcium-list set Turbulence-centroid item (ticks - 1) Turbulence-list set Temp-centroid item (ticks - 1) Temp-list  
+;      ; set DO-centroid item (ticks - 1) DO-list ]
+;      
+;     
+;  ]  ;if Model-scale
+;
+;if model-scale = "St. Croix" [
+;  gis:set-world-envelope (gis:envelope-union-of (gis:envelope-of view1) (gis:envelope-of view6) (gis:envelope-of view7)(gis:envelope-of view8))
+;
+;; GIS-Setup view6 0 ;St croix centroids
+;  GIS-Setup view8 blue ;st croix waterbodies
+;  GIS-setup view1 blue ;St croix river
+;  GIS-Setup view7 red ;st croix infected ponds 
+;  
+;
+;foreach gis:feature-list-of view6 [
+;
+; let location gis:location-of (first (first (gis:vertex-lists-of ?))) 
+;       ; location will be an empty list if the point lies outside the 
+;       ; bounds of the current NetLogo world, as defined by our current 
+;      ; coordinate transformation 
+;      if not empty? location 
+;
+;     [ create-centroid-labels 1 
+;       [ set xcor item 0 location 
+;         set ycor item 1 location 
+;         set size 0 set color blue set shape "circle"         
+;         ;set label gis:property-value ? "OBJECTID_1" ; reads polygon id from shapefile
+;         set centroid-labels-id gis:property-value ? "OBJECTID_1"       
+;         set centroid-area-sqkm gis:property-value ? "AREASQKM" ; reads surface area in square kilometers from 
+;         set centroid-area-sqm (1000000 * centroid-area-sqkm)
+;         set pH-centroid 0 
+;         set Calcium-centroid 0 
+;         set Turbulence-centroid 0 
+;         set Temp-centroid 0 
+;         set DO-centroid 0 
+;         set pH-list [] 
+;         set Calcium-list [] 
+;         set Turbulence-list [] 
+;         set Temp-list [] 
+;         set DO-list []
+;            
+;            
+;            
+;           ] ] ]   
+;  
+;  
+; ] ;if model-scale
+;
+;foreach gis:feature-list-of view3 ;creates St. Croix watershed border
+;      [
+;       gis:set-drawing-color white
+;       gis:draw ? 1.0      
+;      ] 
+;display ;turns display back on
+;
+; ask patches [set id this-centroid]
+;end; end setup
+;
+;to GIS-Setup [q1 q2]
+;
+;; gis:set-drawing-color q2
+;; gis:draw q1 1.0
+;; gis:fill q1 q2 
+;
+;foreach gis:feature-list-of q1
+;        [
+;        gis:set-drawing-color q2
+;        gis:draw ? 1.0
+;        gis:fill ? q2        
+;      ] 
+;      ask patches gis:intersecting q1
+;  [ set pcolor q2 ]
+;end
+;
+;          
+  ask patches [
+    if gis:intersects? view6 self 
+    
+    ;  [set TEST-ID gis:property-value view6 "OBJECTID_1" ]
+        
+        [sprout-centroid-labels 1 
+      
+            [set size 1 set color white set shape "circle" 
+             set centroid-labels-id (who + 1) 
+             set pH-centroid 0 
+             set Calcium-centroid 0 
+             set Turbulence-centroid 0 
+             set Temp-centroid 0 
+             set DO-centroid 0 
+             set pH-list [] 
+             set Calcium-list [] 
+             set Turbulence-list [] 
+             set Temp-list [] 
+             set DO-list []
+            ; set id (gis:property"objectID_1"  ;(gis:property-value (view6 of patch-here) "OBJECTID_1") 
+       ]
+     ] ;ask patches
+   ] ;ask patches 
+  
+  

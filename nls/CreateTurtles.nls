@@ -1,0 +1,26 @@
+to createturtles
+  crt 1 [
+  setxy 67 190
+  set color yellow
+  set size 5
+  
+  ]
+  
+end
+
+to do-migration
+
+ask turtles [
+  
+
+  let p one-of patches in-radius 8 with [pxcor >= [xcor] of myself and is-water? = True]
+  
+  move-to p
+  if xcor >= 472 [stop]
+  
+  
+
+]
+
+
+end

@@ -1,4 +1,14 @@
-extensions [ gis ]                                                                       ;; must tell NetLogo to load gis extension, included in NetLogo
+extensions [ gis array table matrix ]                                                                       ;; must tell NetLogo to load gis extension, included in NetLogo
+
+__includes  
+[
+  "nls/setup-gis.nls"     ;GIS input procedures
+  "nls/createTurtles.nls" ;Create Turtles
+  
+  
+]
+
+
 globals [ klamath-dataset                                                                ;; Klamath River dataset, clipped Ocean to Iron Gate Dam
           mht-dataset                                                                    ;; Mesohabitat Units to match how R model accounts for population. Need to create this- polygon shapefile from USFWS survey data
           destination-dataset                                                            ;; Spawning destinations that match natal location of fish. Need to create this- polygon shapefile from literature
@@ -7,65 +17,33 @@ globals [ klamath-dataset                                                       
 ; breed [ destinations destination ]
 ; breed [ country-vertices country-vertex ]
 
-patches-own [ population-size mht is-thermal-refugia ]                                   ;; count of fish population in patch, MHT number, and status as thermal refugia
+patches-own [ population-size mht is-thermal-refugia? temperature is-water?]                                   ;; count of fish population in patch, MHT number, and status as thermal refugia
+
+turtles-own []
+
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 
 to setup
   ca
-  ; Note that setting the coordinate system here is optional, as
-  ; long as all of your datasets use the same coordinate system.
- ; gis:load-coordinate-system (word "data/" projection ".prj")                            ;; NHD dataset is in GCS NAD83, getting an error when I run this that file does not exist
-  set klamath-dataset gis:load-dataset "NHDKlamath.shp"
-  ;set mht-dataset gis:load-dataset "KlamathMHT.shp"
-  ;set destination-dataset gis:load-dataset "KlamathSpawningDestinations.shp"
-  ;set thermalrefugia-dataset gis:load-dataset "KlamathThermalRefugia.shp"
+ setup-gis
+ createturtles
 
-  gis:set-world-envelope ;(gis:envelope-union-of 
-                         (gis:envelope-of klamath-dataset)                               ;; Set the world envelope to the union of all of our dataset's envelopes
-;                                                (gis:envelope-of waterbodies-dataset)
-;                                                (gis:envelope-of streams-dataset))
-;                                                (gis:envelope-of elevation-dataset))
+ 
+ 
 end
+
+to go
+ do-migration
+end
+
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 
-;; Drawing polyline data from a shapefile
-to display-klamath
-  gis:set-drawing-color blue
-  gis:draw klamath-dataset 4                                                       ;; when this is set to 1, I get a much larger scale. Set to 4 gives smaller scale but there are holes in the river. Need to figure out appropriate scale here (width of river)
-end
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 
-;; Using gis:intersecting to find the set of patches that intersects
-;; a given vector feature (in this case, a river).
-to display-klamath-in-patches
-  ask patches [ set pcolor black ]
-  ask patches gis:intersecting klamath-dataset
-  [ set pcolor cyan ]
-end
 
-;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
-
-to display-mht
-  gis:set-drawing-color black
-  gis:draw klamath-dataset 1                                            
-end
-to display-mhts                                                   ;; may use this to display MHT in patches?
-;  ; This is the preferred way of copying values from a raster dataset
-;  ; into a patch variable: in one step, using gis:apply-raster.
-;  gis:apply-raster elevation-dataset elevation
-;  ; Now, just to make sure it worked, we'll color each patch by its
-;  ; elevation value.
-;  let min-elevation gis:minimum-of elevation-dataset
-;  let max-elevation gis:maximum-of elevation-dataset
-;  ask patches
-;  [ ; note the use of the "<= 0 or >= 0" technique to filter out
-;    ; "not a number" values, as discussed in the documentation.
-;    if (elevation <= 0) or (elevation >= 0)
-;    [ set pcolor scale-color black elevation min-elevation max-elevation ] ]
-end
 
 ;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
 
@@ -238,11 +216,11 @@ end
 GRAPHICS-WINDOW
 187
 10
-11197
-4441
+2197
+841
 -1
 -1
-11.0
+2.0
 1
 8
 1
@@ -269,23 +247,6 @@ BUTTON
 217
 NIL
 display-mhts
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-5
-260
-175
-293
-NIL
-display-countries
 NIL
 1
 T
@@ -369,57 +330,6 @@ NIL
 NIL
 1
 
-BUTTON
-5
-380
-175
-413
-NIL
-display-population-in-patches
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-4
-465
-184
-498
-NIL
-draw-us-rivers-in-green
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-4
-505
-184
-538
-NIL
-highlight-large-cities
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 CHOOSER
 5
 10
@@ -431,115 +341,47 @@ projection
 0
 
 BUTTON
-5
-420
-175
-453
-NIL
-display-countries-using-links
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1
-595
-186
-628
-NIL
-display-elevation
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1
-675
-186
-708
-NIL
-sample-elevation-with-patches
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1
-635
-186
-668
-NIL
-display-elevation-in-patches
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-0
-766
-185
-799
-NIL
-match-cells-to-patches
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-0
-726
-185
-759
-NIL
-display-gradient-in-patches
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-4
-545
-184
-578
+7
+378
+187
+411
 NIL
 clear-drawing
 NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+58
+2230
+125
+2263
+setup
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+94
+438
+157
+471
+go
+go
+T
 1
 T
 OBSERVER
