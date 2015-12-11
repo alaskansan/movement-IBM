@@ -1,0 +1,69 @@
+to setup-gis
+  ; Note that setting the coordinate system here is optional, as
+  ; long as all of your datasets use the same coordinate system.
+ ; gis:load-coordinate-system (word "data/" projection ".prj")                            ;; NHD dataset is in GCS NAD83, getting an error when I run this that file does not exist
+  set klamath-dataset gis:load-dataset "NHDKlamath.shp"
+  ;set mht-dataset gis:load-dataset "KlamathMHT.shp"
+  ;set destination-dataset gis:load-dataset "KlamathSpawningDestinations.shp"
+  ;set thermalrefugia-dataset gis:load-dataset "KlamathThermalRefugia.shp"
+
+  gis:set-world-envelope ;(gis:envelope-union-of 
+                         (gis:envelope-of klamath-dataset)       
+            ;  (gis:envelope-of waterbodies-dataset)
+;                                                (gis:envelope-of streams-dataset))
+;                                                (gis:envelope-of elevation-dataset))
+
+  
+  
+;   foreach gis:feature-list-of klamath-dataset 
+;        [
+;        gis:set-drawing-color blue
+;        gis:draw ? 1.0
+;        gis:fill ? blue        
+;      ] 
+      ask patches gis:intersecting klamath-dataset 
+  [ set pcolor blue set is-water? True ] 
+end
+  
+  
+
+  ;; Drawing polyline data from a shapefile
+
+
+
+
+
+to display-klamath
+  gis:set-drawing-color blue
+  gis:draw klamath-dataset 4                                                       ;; when this is set to 1, I get a much larger scale. Set to 4 gives smaller scale but there are holes in the river. Need to figure out appropriate scale here (width of river)
+end
+
+
+;; Using gis:intersecting to find the set of patches that intersects
+;; a given vector feature (in this case, a river).
+to display-klamath-in-patches
+  ask patches [ set pcolor black ]
+  ask patches gis:intersecting klamath-dataset
+  [ set pcolor cyan ]
+end
+
+;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;
+
+to display-mht
+  gis:set-drawing-color black
+  gis:draw klamath-dataset 1                                            
+end
+to display-mhts                                                   ;; may use this to display MHT in patches?
+;  ; This is the preferred way of copying values from a raster dataset
+;  ; into a patch variable: in one step, using gis:apply-raster.
+;  gis:apply-raster elevation-dataset elevation
+;  ; Now, just to make sure it worked, we'll color each patch by its
+;  ; elevation value.
+;  let min-elevation gis:minimum-of elevation-dataset
+;  let max-elevation gis:maximum-of elevation-dataset
+;  ask patches
+;  [ ; note the use of the "<= 0 or >= 0" technique to filter out
+;    ; "not a number" values, as discussed in the documentation.
+;    if (elevation <= 0) or (elevation >= 0)
+;    [ set pcolor scale-color black elevation min-elevation max-elevation ] ]
+end

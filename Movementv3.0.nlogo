@@ -66,7 +66,7 @@ to go                                                                      ;; in
   if all? turtles [xcor = 2634]                                            ;; if all turtles reach the end of the model, stop 
     [ stop ]
   
-;;ask turtles [add-salmon]
+;;ask turtles [add-salmon]                                                 ;; in add-salmon.nls
 
 ;;ask turtles [do-mortality]
 
@@ -78,6 +78,12 @@ end
 
 ;------------------------------------------------------------------------------------------------------
 
+<<<<<<< HEAD
+
+;------------------------------------------------------------------------------------------------------
+
+=======
+>>>>>>> origin/master
 to do-mortality
 ;                                                                          ;; calculate the "battery life" of each salmon, kill those who are ecologically dead
 end
